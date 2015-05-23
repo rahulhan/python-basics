@@ -14,4 +14,4 @@ class Details(models.Model):
     class Meta:
         unique_together = (("user"),)
         ordering = ['user']
-        verbose_name_plural = "user"
+        verbose_name_plural = "Details"
