@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 import datetime
 import logging
+from .serializers import UserSerializer
 
 # logger settings
 logger = logging.getLogger("api.users")
@@ -130,3 +131,24 @@ class UserDelete(generics.DestroyAPIView):
         except:
             return Response(dict(error=["user_cant_not_be_deleted"], data=dict()),
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListAllUser(generics.ListAPIView):
+    """
+        List user details
+    """
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        """
+            get query set
+        """
+        return User.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        """
+            send custom response using overriding the list method
+        """
+        
+        response = generics.ListAPIView.list(self, request, *args, **kwargs).data
+        return Response(dict(data=response, error=[]), status=status.HTTP_200_OK)
