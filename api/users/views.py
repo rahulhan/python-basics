@@ -96,3 +96,37 @@ class AddDetails(generics.ListCreateAPIView):
         except:
             return Response(dict(error=["details_cant_not_be_saved"], data=dict()),
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDelete(generics.DestroyAPIView):
+    """
+        View to delete a user
+    """
+    def delete(self, request):
+        """
+            parameters:
+            {
+                "user": "username"
+            }
+        """
+        self.username = request.DATA.get("user", None)
+
+        if not self.username:
+            return Response(dict(error=["username_empty"], data=dict()),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            self.userObj = User.objects.get(username=self.username)
+        except:
+            self.userObj = None
+
+        if not self.userObj:
+            return Response(dict(error=["user_does_not_exists"], data=dict()),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            User.objects.filter(username=self.username).delete()
+            return Response(dict(error=[], data=dict(), status=status.HTTP_200_OK))
+        except:
+            return Response(dict(error=["user_cant_not_be_deleted"], data=dict()),
+                            status=status.HTTP_400_BAD_REQUEST)
