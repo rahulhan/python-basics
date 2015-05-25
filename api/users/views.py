@@ -214,5 +214,46 @@ class EditUser(generics.ListCreateAPIView):
             return Response(dict(data=[], error=['can_not_edit_user']), status=status.HTTP_400_BAD_REQUEST)
 
 
+class EditUserDetails(generics.ListCreateAPIView):
+    """
+        View to edit user details
+    """
+    def post(self, request):
+        """
+            parameters:
+            {
+                "username": "<user>",
+                "city": "<city>"
+            }
+        """
+        self.username = request.DATA.get("username", None)
+        self.city = request.DATA.get("city", None)
 
+        if not self.username:
+            return Response(dict(error=["username_empty"], data=dict()),
+                            status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            self.userObj = User.objects.get(username=self.username)
+        except:
+            self.userObj = None
+
+        if not self.userObj:
+            return Response(dict(error=["user_does_not_exists"], data=dict()),
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            self.detailObj = Details.objects.get(user=self.userObj)
+        except:
+            self.detailObj = None
+
+        if not self.detailObj:
+            return Response(dict(data=[], error=['details_not_found']), status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            self.detailObj.city = self.city
+            self.detailObj.save()
+            response_dict = dict(username=self.username, city=self.city)
+            return Response(dict(error=[], data=response_dict), status=status.HTTP_200_OK)
+        except:
+            return Response(dict(data=[], error=['details_can_not_be_edit']), status=status.HTTP_400_BAD_REQUEST)
