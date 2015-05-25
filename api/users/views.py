@@ -135,7 +135,7 @@ class UserDelete(generics.DestroyAPIView):
 
 class ListAllUser(generics.ListAPIView):
     """
-        List user details
+        List user(s) details
     """
     serializer_class = UserSerializer
 
@@ -152,3 +152,27 @@ class ListAllUser(generics.ListAPIView):
         
         response = generics.ListAPIView.list(self, request, *args, **kwargs).data
         return Response(dict(data=response, error=[]), status=status.HTTP_200_OK)
+
+
+class ListUser(generics.ListAPIView):
+    """
+        List user details
+    """
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        """
+            get query set
+        """
+        return [User.objects.get(id=self.kwargs.get("user_id"))]
+
+    def list(self, request, *args, **kwargs):
+        """
+            send custom response using overriding the list method
+        """
+        try:
+            response = generics.ListAPIView.list(self, request, *args, **kwargs).data
+        except:
+            return Response(dict(data=[], error=['user_not_found']), status=status.HTTP_400_BAD_REQUEST)
+        return Response(dict(data=response, error=[]), status=status.HTTP_200_OK)
+
