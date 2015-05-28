@@ -14,3 +14,16 @@ class Details(models.Model):
     class Meta:
         ordering = ['user']
         verbose_name_plural = "Details"
+
+
+class GlobalConfig(models.Model):
+
+    """
+        global configuration table
+    """
+
+    name = models.CharField(max_length=10)
+    value = models.TextField()
+
+    class Meta:
+        verbose_name_plural = "Global Config"

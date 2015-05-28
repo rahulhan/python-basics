@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from .views import AddUser, AddDetails, UserDelete, ListAllUser, ListUser, EditUser, EditUserDetails
+from .views import AddUser, AddDetails, UserDelete, ListAllUser, ListUser, EditUser, EditUserDetails, AuthenticateUserView
 
 urlpatterns = patterns('', 
                        url(r'add/$',
@@ -15,5 +15,7 @@ urlpatterns = patterns('',
                        url(r'edit/$',
                            EditUser.as_view(),),
                        url(r'edit/details/$',
-                           EditUserDetails.as_view(),),)
+                           EditUserDetails.as_view(),),
+                       url(r'login/$',
+                           AuthenticateUserView.as_view(),),)
 
