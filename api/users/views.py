@@ -1,13 +1,26 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from .models import Details
+from .models import Details, GlobalConfig
 from rest_framework import generics, filters
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny
 import datetime
 import logging
 from .serializers import UserSerializer
-
+from django.db import connection
+from datetime import timedelta
+from django.conf import settings
+from django.contrib.auth import authenticate
+from django.core.exceptions import ObjectDoesNotExist
+from itertools import chain
+from rest_framework import views
+from collections import defaultdict
+import pytz
+import py_compile
+import re
+import os
 # logger settings
 logger = logging.getLogger("api.users")
 
@@ -257,3 +270,84 @@ class EditUserDetails(generics.ListCreateAPIView):
             return Response(dict(error=[], data=response_dict), status=status.HTTP_200_OK)
         except:
             return Response(dict(data=[], error=['details_can_not_be_edit']), status=status.HTTP_400_BAD_REQUEST)
+
+
+class AuthTokenUtils(object):
+
+    """
+        Class for common methods
+        1. authenticate user token
+        2. authenticate master : check if a user can be logged into any one of the masters
+        3. add master token
+    """
+
+    def authenticate_user_token(self, userobj):
+        """
+            Generate a new token for each user and check the validity of the token.
+            If the token has expired, generate a new token and return the new value.
+        """
+
+        try:
+            time_period = int(GlobalConfig.objects.get(name="token_exp").value)
+        except:
+            time_period = 60
+
+        # First time token generation
+        token_obj, created = Token.objects.get_or_create(user=userobj)
+        if token_obj and created:
+            return token_obj
+
+        # This is required for the time comparison
+        utc_now = datetime.datetime.utcnow()
+        utc_now = utc_now.replace(tzinfo=pytz.utc)
+
+        # The token has expired, generate a new token and return the token
+        # object
+        if token_obj and token_obj.created < utc_now - timedelta(minutes=time_period):
+            token_obj.delete()
+            token_obj = Token.objects.create(user=userobj)
+            return token_obj
+
+        # No change, return the token as it is
+        return token_obj
+
+
+class AuthenticateUserView(views.APIView):
+
+    """
+        View to authenticate user
+    """
+
+    # Public access to login view
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """
+            Parameters:
+                        {
+                            "username": <username>,
+                            "password": <password>,
+                        }
+        """
+
+        # Get the POST parameters from the parsed JSON
+        self.username = request.DATA.get("username")
+        self.password = request.DATA.get("password")
+
+        if not self.username or not self.password:
+            logger.error("Empty username or password entered")
+            return Response(dict(error=["username_password_empty"], data={}, status=status.HTTP_400_BAD_REQUEST))
+
+        # User authentication against django database
+        self.userobj = authenticate(username=self.username, password=self.password)
+
+        # Get a list of all the connected masters
+        authtokenutils = AuthTokenUtils()
+
+        if self.userobj:
+            # Check existing token and generate new token of existing token has expired
+            user_auth_token = authtokenutils.authenticate_user_token(self.userobj)
+            return Response(dict(error=[], data=dict(username=self.username, token=user_auth_token.key)),
+                            status=status.HTTP_200_OK)
+        else:
+            return Response(dict(error=["unauthorized_access"], data={}), status=status.HTTP_401_UNAUTHORIZED)

@@ -37,8 +37,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
     'rest_framework',
+    'rest_framework.authtoken',
+    'users',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -50,7 +51,24 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'api.middleware.TokenAuthenticationMiddleware'
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+
+    'PAGINATE_BY': 20,                 # Default to 10
+    # Allow client to override, using `?page_size=xxx`.
+    'PAGINATE_BY_PARAM': 'page_size',
+    # Maximum limit allowed when using `?page_size=xxx`.
+    'MAX_PAGINATE_BY': 100
+
+}
 
 ROOT_URLCONF = 'api.urls'
 
@@ -102,3 +120,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+LOGIN_URL = '/users/login/'
+
+PUBLIC_URLS = (
+    r'admin/',
+)
