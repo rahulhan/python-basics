@@ -334,7 +334,6 @@ class AuthenticateUserView(views.APIView):
         # User authentication against django database
         self.userobj = authenticate(username=self.username, password=self.password)
 
-        # Get a list of all the connected masters
         authtokenutils = AuthTokenUtils()
 
         if self.userobj:
