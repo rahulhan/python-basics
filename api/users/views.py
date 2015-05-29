@@ -274,13 +274,6 @@ class EditUserDetails(generics.ListCreateAPIView):
 
 class AuthTokenUtils(object):
 
-    """
-        Class for common methods
-        1. authenticate user token
-        2. authenticate master : check if a user can be logged into any one of the masters
-        3. add master token
-    """
-
     def authenticate_user_token(self, userobj):
         """
             Generate a new token for each user and check the validity of the token.
