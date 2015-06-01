@@ -22,8 +22,8 @@ class GlobalConfig(models.Model):
         global configuration table
     """
 
-    name = models.CharField(max_length=10)
-    value = models.TextField()
+    name = models.CharField(max_length=10, default="token_exp")
+    value = models.TextField(default="60")
 
     class Meta:
         verbose_name_plural = "Global Config"
